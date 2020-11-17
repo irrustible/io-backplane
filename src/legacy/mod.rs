@@ -22,13 +22,16 @@ use std::os::windows::io::{AsRawHandle, FromRawHandle, RawHandle};
 ))))]
 use std::os::unix::fs::FileExt;
 
-pub struct File(fs::File);
+#[derive(Clone)]
+pub struct IO {}
 
-impl File {
-    pub async fn open(path: PathBuf, opts: fs::OpenOptions) -> Result<File, Error> {
+impl IO {
+    pub async fn open_file(path: PathBuf, opts: fs::OpenOptions) -> Result<File, Error> {
         Ok(File(unblock(move || opts.open(path)).await?))
     }
 }
+
+pub struct File(fs::File);
 
 pub struct ReadBuffer {
     buffer: Buffer,
@@ -67,10 +70,10 @@ impl ReadBuffer {
         target_os = "openbsd",
         target_os = "linux",
     ))]
-    pub async fn fill_at(&mut self, file: &fs::File, offset: usize) -> Result<usize, Error> {
+    pub async fn fill_at(&mut self, file: &File, offset: usize) -> Result<usize, Error> {
         let buf = replace(&mut self.buffer, Buffer::new());
         let high = self.high;
-        let fd = file.as_raw_fd();
+        let fd = file.0.as_raw_fd();
         let (buf2, read) = unblock(move || {
             let mut buf = buf;
             let writeable = Writeable::new(&mut buf, high);
@@ -101,10 +104,10 @@ impl ReadBuffer {
         target_os = "openbsd",
         target_os = "linux",
     ))))]
-    pub async fn fill_at(&mut self, file: &fs::File, pos: usize) -> Result<usize, Error> {
+    pub async fn fill_at(&mut self, file: &File, pos: usize) -> Result<usize, Error> {
         let buf = replace(&mut self.buffer, Buffer::new());
         let high = self.high;
-        let fd = file.as_raw_fd();
+        let fd = file.0.as_raw_fd();
         let (buf2, read) = unblock(move || {
             let mut buf = buf;
             let file = ManuallyDrop::new(unsafe { fs::File::from_raw_fd(fd) });
@@ -202,11 +205,11 @@ impl WriteBuffer {
         target_os = "openbsd",
         target_os = "linux",
     ))]
-    pub async fn write_at(&mut self, file: &fs::File, offset: usize, sync: bool) -> Result<(), Error> {
+    pub async fn write_at(&mut self, file: &File, offset: usize, sync: bool) -> Result<(), Error> {
         let buf = replace(&mut self.buffer, Buffer::new());
         let high = self.high;
         let low = self.low;
-        let fd = file.as_raw_fd();
+        let fd = file.0.as_raw_fd();
         let (buf2, count) = unblock(move || {
             let mut buf = buf;
             let readable = Readable::new(&mut buf, low, high - low);
@@ -239,11 +242,11 @@ impl WriteBuffer {
         target_os = "openbsd",
         target_os = "linux",
     ))]
-    pub async fn write_all_at(&mut self, file: &fs::File, offset: usize, sync: bool) -> Result<(), Error> {
+    pub async fn write_all_at(&mut self, file: &File, offset: usize, sync: bool) -> Result<(), Error> {
         let buf = replace(&mut self.buffer, Buffer::new());
         let high = self.high;
         let low = self.low;
-        let fd = file.as_raw_fd();
+        let fd = file.0.as_raw_fd();
         let buf2 = unblock(move || {
             let mut buf = buf;
             let readable = Readable::new(&mut buf, low, high - low);

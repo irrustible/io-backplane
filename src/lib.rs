@@ -2,8 +2,8 @@
 // mod buffer;
 // pub use buffer::Buffer;
 
-// #[cfg(feature = "ringbahn")]
-// mod ringbahn;
+#[cfg(feature = "ringbahn")]
+mod ringbahn;
 
 mod buffer;
 mod mmap;
