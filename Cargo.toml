@@ -1,0 +1,51 @@
+[package]
+name = "io-backplane"
+version = "0.1.0"
+authors = ["James Laver <james.laver@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+default = ["uring"]
+uring = ["libc", "maglev", "ringbahn"]
+
+[dependencies]
+async-oneshot = "0.4.2"
+async-channel = "1.5.1"
+# async-dup = "1.2.2"
+async-fs = "1.5.0"
+async-spsc = { path = "../async-spsc" }
+atomic-waker = "*"
+blocking = "*"
+concurrent-queue = "1.*"
+futures-micro = "0.4.0"
+futures-lite = "1.11.2"
+ping-pong-cell = "0.1.2"
+sharded-slab = "0.1.0"
+simple-mutex = "1.1.5"
+event-listener = "2.5.1"
+parking = "2.0.0"
+smallvec = "1.4.2"
+once_cell = "1.5.2"
+
+[dependencies.libc]
+version = "0.2.80"
+optional = true
+
+[dependencies.ringbahn]
+path = "../ringbahn"
+# git = "https://github.com/ringbahn/ringbahn"
+# branch = "master"
+optional = true
+
+[dependencies.maglev]
+path = "../maglev"
+# git = "https://github.com/ringbahn/maglev"
+# branch = "master"
+optional = true
+
+[patch.crates-io]
+uring-sys = { path = "../uring-sys" }
+libc = { path = "../libc" }
+ringbahn = { path = "../ringbahn" }
